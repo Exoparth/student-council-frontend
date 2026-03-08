@@ -135,7 +135,7 @@ function Home() {
       <div className="bg-blue-50 border-b">
         <div className="container-center py-3 flex justify-between items-center flex-wrap gap-2">
           <p className="text-sm font-medium text-blue-700">
-            📢 Applications for Academic Year 2024-25 are now open!
+            📢 Applications for Academic Year 2025-26 are now open!
           </p>
 
           <button
@@ -151,7 +151,7 @@ function Home() {
       <section className="py-24 bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="container-center text-center">
           <div className="inline-block bg-blue-100 text-blue-700 px-4 py-1 rounded-full text-sm mb-4">
-            🎓 Student Council 2024
+            🎓 Student Council 2026
           </div>
 
           <h1 className="text-5xl font-bold text-gray-800 mb-4">
@@ -185,7 +185,7 @@ function Home() {
       <section className="container-center py-16">
         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-10 text-white">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold">Elections 2024</h2>
+            <h2 className="text-3xl font-bold">Elections 2026</h2>
             <p className="text-white/80">
               Time remaining to submit your application
             </p>
@@ -288,7 +288,7 @@ function Home() {
 
       {/* FOOTER */}
       <footer className="border-t py-6 text-center text-gray-500 text-sm">
-        <div className="container-center">© 2024 Student Council Portal</div>
+        <div className="container-center">© 2026 Student Council Portal</div>
       </footer>
     </div>
   );

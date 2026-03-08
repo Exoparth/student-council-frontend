@@ -11,6 +11,8 @@ import Home from "../pages/Home";
 import Profile from "../pages/Profile";
 import Positions from "../pages/Positions";
 import Contact from "../pages/Contact";
+import AdminUsers from "../pages/AdminUsers";
+import AdminLayout from "../layouts/AdminLayout";
 
 function AppRoutes() {
   return (
@@ -48,14 +50,19 @@ function AppRoutes() {
         }
       />
 
+
+
       <Route
         path="/admin"
         element={
           <AdminRoute>
-            <AdminDashboard />
+            <AdminLayout />
           </AdminRoute>
         }
-      />
+      >
+        <Route index element={<AdminDashboard />} />
+        <Route path="users" element={<AdminUsers />} />
+      </Route>
     </Routes>
   );
 }
