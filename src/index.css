@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+/* custom reusable classes */
+
+.container-center {
+  @apply max-w-6xl mx-auto px-6;
+}
+
+.card {
+  @apply bg-white rounded-lg shadow-md p-6;
+}
+
+.btn-primary {
+  @apply bg-primary text-white px-4 py-2 rounded-md hover:bg-primaryDark transition;
+}
+
+.btn-danger {
+  @apply bg-danger text-white px-4 py-2 rounded-md hover:bg-red-600 transition;
+}
