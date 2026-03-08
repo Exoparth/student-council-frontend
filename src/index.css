@@ -20,3 +20,10 @@
 .btn-danger {
   @apply bg-danger text-white px-4 py-2 rounded-md hover:bg-red-600 transition;
 }
+.btn-secondary {
+  @apply px-6 py-2 bg-white text-primary border-2 border-primary rounded-lg font-semibold hover:bg-primary/5 transition-colors;
+}
+
+.card {
+  @apply bg-white rounded-lg p-6 shadow-md;
+}

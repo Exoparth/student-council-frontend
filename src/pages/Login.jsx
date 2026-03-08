@@ -3,10 +3,11 @@ import { useNavigate, Link } from "react-router-dom";
 
 import { loginUser } from "../api/authApi";
 import { setToken } from "../utils/token";
+import { useAuth } from "../context/AuthContext";
 
 function Login() {
   const navigate = useNavigate();
-
+  const { setUser } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -33,12 +34,11 @@ function Login() {
       console.log("Login Response:", res);
 
       setToken(res.token);
-      localStorage.setItem("user", JSON.stringify(res.user));
-
+      setUser(res.user);
       if (res.user.role === "admin") {
         navigate("/admin");
       } else {
-        navigate("/apply");
+        navigate("/");
       }
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");

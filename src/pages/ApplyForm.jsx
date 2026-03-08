@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { applyForCouncil } from "../api/applicationApi";
 
 function ApplyForm() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const selectedPosition = location.state?.position || "";
 
   const [formData, setFormData] = useState({
     domainId: "",
@@ -11,7 +13,7 @@ function ApplyForm() {
     rollNo: "",
     currentYear: "",
     phone: "",
-    position: "",
+    position: selectedPosition,
     statement: "",
     experience: "",
     kts: "",
@@ -112,14 +114,41 @@ function ApplyForm() {
             required
           />
 
-          <input
-            type="text"
+          <select
             name="position"
-            placeholder="Position Applying For"
             className="border p-2 rounded"
+            value={formData.position}
             onChange={handleChange}
             required
-          />
+          >
+            <option value="">Select Position</option>
+            <option value="General Secretary">General Secretary</option>
+            <option value="Assistant General Secretary">
+              Assistant General Secretary
+            </option>
+            <option value="Joint Secretary">Joint Secretary</option>
+            <option value="Assistant Joint Secretary">
+              Assistant Joint Secretary
+            </option>
+            <option value="Points and Tally Head">
+              Points and Tally (Head)
+            </option>
+            <option value="Points and Tally Co-Head">
+              Points and Tally (Co-Head)
+            </option>
+            <option value="Student Pool Coordinator Head">
+              Student Pool Coordinator (Head)
+            </option>
+            <option value="Student Pool Coordinator Co-Head">
+              Student Pool Coordinator (Co-Head)
+            </option>
+            <option value="IMC Head">
+              IMC - Integrated Marketing Communication (Head)
+            </option>
+            <option value="IMC Co-Head">
+              IMC - Integrated Marketing Communication (Co-Head)
+            </option>
+          </select>
 
           <input
             type="number"
