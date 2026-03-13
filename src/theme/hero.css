@@ -1,0 +1,80 @@
+.hero-fold-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100vh; /* full screen */
+  min-height: 700px; /* fallback for small screens */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+.wrapper-3d {
+  position: relative;
+  perspective: 20vw;
+  transform-style: preserve-3d;
+}
+
+.fold {
+  overflow: hidden;
+  width: 100%;
+  height: 32vh;
+}
+
+.fold-top {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  transform-origin: bottom center;
+  transform: rotateX(-120deg);
+}
+
+.fold-bottom {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  transform-origin: top center;
+  transform: rotateX(120deg);
+}
+
+.marquee {
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  font-size: clamp(3rem,5vw,6rem);
+  font-weight: 800;
+  overflow: hidden;
+  white-space: nowrap;
+  color: rgba(255,255,255,0.15);
+}
+
+.track {
+  padding: 20px 0;
+}
+
+.-focus {
+  color: #fff;
+}
+
+.hero-buttons {
+  margin-top: 40px;
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.fold-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.hero-buttons {
+  position: absolute;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 14px;
+}
