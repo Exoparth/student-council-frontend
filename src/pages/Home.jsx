@@ -9,7 +9,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 function Home() {
   const navigate = useNavigate();
-
+  const [activeFaq, setActiveFaq] = useState(0);
   /* ── Refs ── */
   const statsSectionRef = useRef(null);
   const statsSlidesRef = useRef([]);
@@ -252,11 +252,27 @@ function Home() {
       cards.forEach((card, i) => {
         const next = cards[i + 1];
         if (!next) return;
+
         tl.to(
           card,
-          { rotationX: 90, opacity: 0.4, scale: 0.92, duration: 0.5 },
+          {
+            rotationX: 90,
+            opacity: 0.4,
+            scale: 0.92,
+            duration: 0.5,
+            onStart: () => setActiveFaq(i + 1),
+          },
           "+=0.4",
-        ).to(next, { rotationX: 0, opacity: 1, scale: 1, duration: 0.5 }, "<");
+        ).to(
+          next,
+          {
+            rotationX: 0,
+            opacity: 1,
+            scale: 1,
+            duration: 0.5,
+          },
+          "<",
+        );
       });
       tl.to({}, { duration: 0.4 });
     });
@@ -971,11 +987,13 @@ function Home() {
               <div
                 key={i}
                 style={{
-                  width: i === 0 ? "20px" : "6px",
+                  width: activeFaq === i ? "20px" : "6px",
                   height: "6px",
                   borderRadius: "999px",
-                  background: i === 0 ? "#6366f1" : "rgba(255,255,255,0.15)",
-                  transition: "all 0.3s",
+                  background:
+                    activeFaq === i ? "#6366f1" : "rgba(255,255,255,0.15)",
+                  transform: activeFaq === i ? "scale(1.4)" : "scale(1)", // ← add here
+                  transition: "all 0.35s ease",
                 }}
               />
             ))}

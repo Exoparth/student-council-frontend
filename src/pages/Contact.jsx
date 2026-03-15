@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { gsap } from "gsap";
-// import { sendContactMessage } from "../api/contactApi"; // uncomment when API is ready
+import { sendContactMessage } from "../api/contactApi";
+import { useToast } from "../context/ToastContext";
 
 function Contact() {
   const [form, setForm] = useState({
@@ -14,6 +15,8 @@ function Contact() {
 
   const cardRef = useRef(null);
   const infoRef = useRef(null);
+
+  const { showToast } = useToast();
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -36,16 +39,34 @@ function Contact() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSending(true);
-    // Replace with: await sendContactMessage(form);
-    await new Promise((r) => setTimeout(r, 1400));
-    setSending(false);
-    setSent(true);
-    gsap.fromTo(
-      ".success-msg",
-      { opacity: 0, scale: 0.9 },
-      { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(1.5)" },
-    );
+
+    try {
+      setSending(true);
+
+      const res = await sendContactMessage({
+        name: form.name,
+        email: form.email,
+        message: form.message,
+      });
+
+      setSending(false);
+
+      showToast(res.message || "Message sent successfully!", "success");
+
+      setSent(true);
+
+      gsap.fromTo(
+        ".success-msg",
+        { opacity: 0, scale: 0.9 },
+        { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(1.5)" },
+      );
+    } catch (error) {
+      setSending(false);
+
+      const msg = error.response?.data?.message || "Failed to send message";
+
+      showToast(msg, "error");
+    }
   };
 
   const contacts = [

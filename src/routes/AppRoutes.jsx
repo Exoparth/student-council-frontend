@@ -13,6 +13,7 @@ import Positions from "../pages/Positions";
 import Contact from "../pages/Contact";
 import AdminUsers from "../pages/AdminUsers";
 import AdminLayout from "../layouts/AdminLayout";
+import AdminMessages from "../pages/AdminMessages";
 
 function AppRoutes() {
   return (
@@ -62,6 +63,7 @@ function AppRoutes() {
       >
         <Route index element={<AdminDashboard />} />
         <Route path="users" element={<AdminUsers />} />
+        <Route path="/admin/messages" element={<AdminMessages />} />
       </Route>
     </Routes>
   );

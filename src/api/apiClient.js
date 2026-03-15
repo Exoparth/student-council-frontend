@@ -1,12 +1,12 @@
 import axios from "axios";
 
 const apiClient = axios.create({
-  baseURL: "https://student-council-backend-2lca.onrender.com/api",
+  // baseURL: "https://student-council-backend-2lca.onrender.com/api",
+  baseURL: "http://localhost:3000/api",
   headers: {
     "Content-Type": "application/json",
   },
 });
-
 
 // Request Interceptor
 apiClient.interceptors.request.use(
@@ -20,19 +20,16 @@ apiClient.interceptors.request.use(
 
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
-
 
 // Response Interceptor
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-
     const status = error.response?.status;
 
     if (status === 401) {
-
       // remove invalid token
       localStorage.removeItem("token");
 
@@ -40,11 +37,10 @@ apiClient.interceptors.response.use(
       if (window.location.pathname !== "/login") {
         window.location.href = "/login";
       }
-
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default apiClient;

@@ -4,7 +4,9 @@ import {
   updateApplicationStatus,
   scheduleInterview,
   updateInterviewStatus,
+  deleteApplication,
 } from "../api/applicationApi";
+import { getAllMessages } from "../api/contactApi";
 import { getDashboardStats } from "../api/statsApi";
 
 /* ── Shared styles injected once ─────────────────────────────── */
@@ -155,10 +157,14 @@ function AdminDashboard() {
   const [stats, setStats] = useState({ totalUsers: 0, totalApplications: 0 });
   const [search, setSearch] = useState("");
   const [positionFilter, setPositionFilter] = useState("All");
+  const [interviewAppId, setInterviewAppId] = useState(null);
+  const [interviewDate, setInterviewDate] = useState("");
+  const [messages, setMessages] = useState([]);
 
   useEffect(() => {
     fetchApplications();
     fetchStats();
+    fetchMessages();
   }, []);
 
   useEffect(() => {
@@ -189,6 +195,15 @@ function AdminDashboard() {
     }
   };
 
+  const fetchMessages = async () => {
+    try {
+      const data = await getAllMessages();
+      setMessages(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const filterApplications = () => {
     let filtered = [...applications];
     if (search)
@@ -209,16 +224,29 @@ function AdminDashboard() {
     }
   };
 
-  const handleInterview = async (id) => {
-    const date = prompt("Enter Interview Date (YYYY-MM-DD)");
-    if (!date) return;
+  const handleDelete = async (id) => {
+    const confirmDelete = window.confirm("Delete this application?");
+
+    if (!confirmDelete) return;
+
     try {
-      await scheduleInterview(id, date);
+      await deleteApplication(id);
       fetchApplications();
     } catch (error) {
       console.log(error);
     }
   };
+
+  // const handleInterview = async (id) => {
+  //   const date = prompt("Enter Interview Date (YYYY-MM-DD)");
+  //   if (!date) return;
+  //   try {
+  //     await scheduleInterview(id, date);
+  //     fetchApplications();
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // };
 
   const handleInterviewResult = async (id, status) => {
     try {
@@ -392,6 +420,59 @@ function AdminDashboard() {
         </div>
       </div>
 
+      {interviewAppId && (
+        <div
+          className="adm-card"
+          style={{
+            padding: "18px",
+            marginBottom: "18px",
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            flexWrap: "wrap",
+          }}
+        >
+          <span style={{ fontSize: "13px", color: "#cbd5e1" }}>
+            Select interview date
+          </span>
+
+          <input
+            type="date"
+            value={interviewDate}
+            onChange={(e) => setInterviewDate(e.target.value)}
+            className="adm-input"
+          />
+
+          <button
+            className="act-btn act-btn-indigo"
+            onClick={async () => {
+              if (!interviewDate) return;
+
+              try {
+                await scheduleInterview(interviewAppId, interviewDate);
+                setInterviewAppId(null);
+                setInterviewDate("");
+                fetchApplications();
+              } catch (error) {
+                console.log(error);
+              }
+            }}
+          >
+            Confirm
+          </button>
+
+          <button
+            className="act-btn act-btn-gray"
+            onClick={() => {
+              setInterviewAppId(null);
+              setInterviewDate("");
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+
       {/* ── TABLE ── */}
       <div className="tbl-wrap">
         <table className="adm-tbl">
@@ -493,11 +574,17 @@ function AdminDashboard() {
                           </button>
                         </>
                       )}
+                      <button
+                        className="act-btn act-btn-red"
+                        onClick={() => handleDelete(app._id)}
+                      >
+                        Delete
+                      </button>
                       {app.applicationStatus === "accepted" &&
                         !app.interviewDate && (
                           <button
                             className="act-btn act-btn-gray"
-                            onClick={() => handleInterview(app._id)}
+                            onClick={() => setInterviewAppId(app._id)}
                           >
                             Schedule
                           </button>

@@ -37,3 +37,8 @@ export const updateInterviewStatus = async (id, status) => {
   const res = await apiClient.put(`/admin/interview-status/${id}`, { status });
   return res.data;
 };
+
+export const deleteApplication = async (id) => {
+  const res = await apiClient.delete(`/admin/application/${id}`);
+  return res.data;
+};
