@@ -158,7 +158,7 @@ function Navbar() {
           position: "sticky",
           top: 0,
           zIndex: 1000,
-          background: scrolled ? "rgba(15,17,23,0.88)" : "rgba(15,17,23,0.6)",
+          background: scrolled ? "rgba(15,17,23,0.88)" : "#0f1117",
           backdropFilter: "blur(20px) saturate(160%)",
           WebkitBackdropFilter: "blur(20px) saturate(160%)",
           borderBottom: scrolled

@@ -1,27 +1,330 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
-
 import { loginUser } from "../api/authApi";
 import { setToken } from "../utils/token";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 
+/* ─── Grid Cell ─────────────────────────────────────────────── */
+const COLS = 20;
+const ROWS = 14;
+const FADE_MS = 800;
+
+function GridBackground() {
+  const canvasRef = useRef(null);
+  const cells = useRef({});
+  const mouseRef = useRef({ x: -999, y: -999 });
+  const rafRef = useRef(null);
+
+  const getCell = useCallback((col, row) => `${col}-${row}`, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    const onMouseMove = (e) => {
+      mouseRef.current = { x: e.clientX, y: e.clientY };
+      const cw = canvas.width / COLS;
+      const ch = canvas.height / ROWS;
+      const col = Math.floor(e.clientX / cw);
+      const row = Math.floor(e.clientY / ch);
+      const key = getCell(col, row);
+      cells.current[key] = { col, row, lit: 1, ts: Date.now() };
+    };
+    window.addEventListener("mousemove", onMouseMove);
+
+    const COLORS = [
+      "rgba(99,102,241,",
+      "rgba(139,92,246,",
+      "rgba(59,130,246,",
+      "rgba(168,85,247,",
+    ];
+
+    const draw = () => {
+      const now = Date.now();
+      const cw = canvas.width / COLS;
+      const ch = canvas.height / ROWS;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw grid lines
+      ctx.strokeStyle = "rgba(255,255,255,0.035)";
+      ctx.lineWidth = 1;
+      for (let c = 0; c <= COLS; c++) {
+        ctx.beginPath();
+        ctx.moveTo(c * cw, 0);
+        ctx.lineTo(c * cw, canvas.height);
+        ctx.stroke();
+      }
+      for (let r = 0; r <= ROWS; r++) {
+        ctx.beginPath();
+        ctx.moveTo(0, r * ch);
+        ctx.lineTo(canvas.width, r * ch);
+        ctx.stroke();
+      }
+
+      // Draw lit cells
+      Object.keys(cells.current).forEach((key) => {
+        const cell = cells.current[key];
+        const elapsed = now - cell.ts;
+        const alpha = Math.max(0, 1 - elapsed / FADE_MS);
+        if (alpha <= 0) {
+          delete cells.current[key];
+          return;
+        }
+        const colorBase = COLORS[(cell.col + cell.row) % COLORS.length];
+        ctx.fillStyle = colorBase + alpha * 0.35 + ")";
+        ctx.fillRect(cell.col * cw + 1, cell.row * ch + 1, cw - 2, ch - 2);
+
+        // Glow border
+        ctx.strokeStyle = colorBase + alpha * 0.7 + ")";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(cell.col * cw + 1, cell.row * ch + 1, cw - 2, ch - 2);
+      });
+
+      rafRef.current = requestAnimationFrame(draw);
+    };
+    rafRef.current = requestAnimationFrame(draw);
+
+    return () => {
+      cancelAnimationFrame(rafRef.current);
+      window.removeEventListener("resize", resize);
+      window.removeEventListener("mousemove", onMouseMove);
+    };
+  }, [getCell]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 0,
+        pointerEvents: "none",
+      }}
+    />
+  );
+}
+
+/* ─── Eye-tracking Mascot ────────────────────────────────────── */
+function Mascot({ isTypingPassword }) {
+  const leftEyeRef = useRef(null);
+  const rightEyeRef = useRef(null);
+
+  useEffect(() => {
+    const onMouseMove = (e) => {
+      if (isTypingPassword) return; // don't move eyes when closed
+      [leftEyeRef, rightEyeRef].forEach((eyeRef) => {
+        const eye = eyeRef.current;
+        if (!eye) return;
+        const rect = eye.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const angle = Math.atan2(e.clientY - cy, e.clientX - cx);
+        const dist = Math.min(
+          5,
+          Math.hypot(e.clientX - cx, e.clientY - cy) / 8,
+        );
+        const px = Math.cos(angle) * dist;
+        const py = Math.sin(angle) * dist;
+        const pupil = eye.querySelector(".pupil");
+        if (pupil) {
+          pupil.style.transform = `translate(${px}px, ${py}px)`;
+        }
+      });
+    };
+    window.addEventListener("mousemove", onMouseMove);
+    return () => window.removeEventListener("mousemove", onMouseMove);
+  }, [isTypingPassword]);
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        marginBottom: "6px",
+        userSelect: "none",
+      }}
+    >
+      {/* Head */}
+      <div
+        style={{
+          width: "72px",
+          height: "72px",
+          borderRadius: "50%",
+          background: "linear-gradient(135deg, #1e1b4b, #312e81)",
+          border: "2px solid rgba(139,92,246,0.6)",
+          boxShadow:
+            "0 0 24px rgba(139,92,246,0.3), 0 0 60px rgba(99,102,241,0.15)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "6px",
+          position: "relative",
+          flexShrink: 0,
+        }}
+      >
+        {/* Eyes row */}
+        <div style={{ display: "flex", gap: "10px", marginTop: "8px" }}>
+          {[leftEyeRef, rightEyeRef].map((ref, i) => (
+            <div
+              key={i}
+              ref={ref}
+              style={{
+                width: "18px",
+                height: "18px",
+                borderRadius: "50%",
+                background: "#f8fafc",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "inset 0 1px 3px rgba(0,0,0,0.3)",
+                position: "relative",
+                overflow: "hidden",
+                // Eyelid: a pseudo-element would need CSS classes, so we overlay a div instead
+              }}
+            >
+              {/* Pupil (hidden when password typing) */}
+              <div
+                className="pupil"
+                style={{
+                  width: "9px",
+                  height: "9px",
+                  borderRadius: "50%",
+                  background: "#1e1b4b",
+                  transition: "transform 0.05s ease-out, opacity 0.2s ease",
+                  position: "relative",
+                  opacity: isTypingPassword ? 0 : 1,
+                }}
+              >
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "1px",
+                    left: "1px",
+                    width: "3px",
+                    height: "3px",
+                    borderRadius: "50%",
+                    background: "rgba(255,255,255,0.7)",
+                  }}
+                />
+              </div>
+
+              {/* Eyelid overlay — slides down from top to close the eye */}
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  background: "linear-gradient(180deg, #312e81, #1e1b4b)",
+                  borderRadius: "50%",
+                  transform: isTypingPassword
+                    ? "translateY(0%)"
+                    : "translateY(-100%)",
+                  transition: "transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {/* closed-eye line (— shape) */}
+                <div
+                  style={{
+                    width: "10px",
+                    height: "2px",
+                    borderRadius: "2px",
+                    background: "rgba(165,180,252,0.7)",
+                    marginTop: "2px",
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Mouth — straight line when peeking, smile normally */}
+        <div
+          style={{
+            width: "24px",
+            height: isTypingPassword ? "2px" : "8px",
+            borderRadius: isTypingPassword ? "2px" : "0 0 12px 12px",
+            border: isTypingPassword
+              ? "none"
+              : "2px solid rgba(139,92,246,0.7)",
+            borderTop: "none",
+            background: isTypingPassword
+              ? "rgba(139,92,246,0.5)"
+              : "transparent",
+            marginBottom: "6px",
+            transition: "all 0.3s ease",
+          }}
+        />
+
+        {/* Antenna */}
+        <div
+          style={{
+            position: "absolute",
+            top: "-16px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: "2px",
+            height: "14px",
+            background: "rgba(139,92,246,0.7)",
+            borderRadius: "2px",
+          }}
+        >
+          <div
+            style={{
+              width: "7px",
+              height: "7px",
+              borderRadius: "50%",
+              background: isTypingPassword ? "#f472b6" : "#a5b4fc",
+              position: "absolute",
+              top: "-5px",
+              left: "-3px",
+              boxShadow: isTypingPassword
+                ? "0 0 8px rgba(244,114,182,0.9)"
+                : "0 0 8px rgba(165,180,252,0.8)",
+              transition: "background 0.3s ease, box-shadow 0.3s ease",
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Login Page ─────────────────────────────────────────────── */
 function Login() {
   const navigate = useNavigate();
   const { setUser } = useAuth();
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-
+  const formRef = useRef(null);
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [mounted, setMounted] = useState(false);
+  const [isTypingPassword, setIsTypingPassword] = useState(false);
+  const { showToast } = useToast();
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 60);
+    return () => clearTimeout(t);
+  }, []);
+
+  const handleChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,60 +334,282 @@ function Login() {
       setError("");
 
       const res = await loginUser(formData);
-      console.log("Login Response:", res);
 
       setToken(res.token);
       setUser(res.user);
-      if (res.user.role === "admin") {
-        navigate("/admin");
-      } else {
-        navigate("/");
-      }
+
+      showToast("Login successful!", "success");
+
+      navigate(res.user.role === "admin" ? "/admin" : "/");
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed");
+      const msg = err.response?.data?.message || "Login failed";
+
+      setError(msg);
+      showToast(msg, "error");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="card w-[380px]">
-        <h2 className="text-2xl font-bold text-center text-primary mb-6">
-          Login
-        </h2>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#0b0d14",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: "'DM Sans', sans-serif",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@700;800&display=swap');
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+        .auth-card {
+          background: rgba(15,17,26,0.85);
+          backdrop-filter: blur(24px) saturate(160%);
+          -webkit-backdrop-filter: blur(24px) saturate(160%);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 24px;
+          box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(139,92,246,0.08);
+        }
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            className="border p-2 rounded-md"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
+        .auth-input {
+          width: 100%;
+          background: rgba(255,255,255,0.05);
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 12px;
+          padding: 13px 16px;
+          color: #e2e8f0;
+          font-size: 14px;
+          font-family: 'DM Sans', sans-serif;
+          outline: none;
+          transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+        }
+        .auth-input::placeholder { color: #475569; }
+        .auth-input:focus {
+          border-color: rgba(139,92,246,0.6);
+          background: rgba(139,92,246,0.06);
+          box-shadow: 0 0 0 3px rgba(139,92,246,0.12);
+        }
 
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            className="border p-2 rounded-md"
-            value={formData.password}
-            onChange={handleChange}
-            required
-          />
+        .auth-btn {
+          width: 100%;
+          padding: 13px;
+          border-radius: 12px;
+          border: none;
+          background: linear-gradient(135deg, #6366f1, #8b5cf6);
+          color: #fff;
+          font-family: 'Syne', sans-serif;
+          font-weight: 700;
+          font-size: 15px;
+          cursor: pointer;
+          transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+          letter-spacing: 0.3px;
+          box-shadow: 0 8px 24px rgba(99,102,241,0.35);
+        }
+        .auth-btn:hover:not(:disabled) {
+          opacity: 0.92;
+          transform: translateY(-2px);
+          box-shadow: 0 12px 32px rgba(99,102,241,0.5);
+        }
+        .auth-btn:active:not(:disabled) { transform: translateY(0); }
+        .auth-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 
-          <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? "Logging in..." : "Login"}
+        .auth-link {
+          color: #a5b4fc;
+          font-weight: 600;
+          text-decoration: none;
+          transition: color 0.2s;
+        }
+        .auth-link:hover { color: #c4b5fd; }
+
+        .fade-up {
+          opacity: 0;
+          transform: translateY(28px);
+          transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+        .fade-up.in {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        .divider {
+          height: 1px;
+          background: rgba(255,255,255,0.07);
+          margin: 4px 0;
+        }
+
+        .gradient-text {
+          background: linear-gradient(135deg, #a5b4fc, #c4b5fd, #93c5fd);
+          -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+
+        .error-box {
+          background: rgba(239,68,68,0.1);
+          border: 1px solid rgba(239,68,68,0.3);
+          border-radius: 10px;
+          padding: 10px 14px;
+          color: #fca5a5;
+          font-size: 13px;
+        }
+
+        /* Ambient glow blobs */
+        .blob {
+          position: fixed;
+          border-radius: 50%;
+          filter: blur(80px);
+          pointer-events: none;
+          z-index: 0;
+        }
+      `}</style>
+
+      {/* Ambient blobs */}
+      <div
+        className="blob"
+        style={{
+          width: 400,
+          height: 400,
+          top: "-10%",
+          left: "-10%",
+          background:
+            "radial-gradient(circle, rgba(99,102,241,0.12), transparent 70%)",
+        }}
+      />
+      <div
+        className="blob"
+        style={{
+          width: 350,
+          height: 350,
+          bottom: "-8%",
+          right: "-8%",
+          background:
+            "radial-gradient(circle, rgba(139,92,246,0.1), transparent 70%)",
+        }}
+      />
+
+      <GridBackground />
+
+      {/* Card */}
+      <div
+        ref={formRef}
+        className={`auth-card fade-up${mounted ? " in" : ""}`}
+        style={{
+          width: "100%",
+          maxWidth: "400px",
+          padding: "40px 36px",
+          position: "relative",
+          zIndex: 1,
+          margin: "0 16px",
+        }}
+      >
+        {/* Mascot */}
+        <div style={{ textAlign: "center", marginBottom: "18px" }}>
+          <Mascot isTypingPassword={isTypingPassword} />
+          <h1
+            style={{
+              fontFamily: "'Syne', sans-serif",
+              fontWeight: 800,
+              fontSize: "1.8rem",
+              color: "#f1f5f9",
+              marginTop: "14px",
+              lineHeight: 1.1,
+            }}
+          >
+            Welcome <span className="gradient-text">Back</span>
+          </h1>
+          <p style={{ color: "#475569", fontSize: "13.5px", marginTop: "6px" }}>
+            Sign in to your council account
+          </p>
+        </div>
+
+        <div className="divider" style={{ marginBottom: "24px" }} />
+
+        {error && (
+          <div className="error-box" style={{ marginBottom: "16px" }}>
+            ⚠ {error}
+          </div>
+        )}
+
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: "flex", flexDirection: "column", gap: "14px" }}
+        >
+          <div>
+            <label
+              style={{
+                display: "block",
+                fontSize: "12px",
+                color: "#64748b",
+                marginBottom: "6px",
+                fontWeight: 500,
+                letterSpacing: "0.5px",
+                textTransform: "uppercase",
+              }}
+            >
+              Email
+            </label>
+            <input
+              type="email"
+              name="email"
+              placeholder="your@email.com"
+              className="auth-input"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div>
+            <label
+              style={{
+                display: "block",
+                fontSize: "12px",
+                color: "#64748b",
+                marginBottom: "6px",
+                fontWeight: 500,
+                letterSpacing: "0.5px",
+                textTransform: "uppercase",
+              }}
+            >
+              Password
+            </label>
+            <input
+              type="password"
+              name="password"
+              placeholder="••••••••"
+              className="auth-input"
+              value={formData.password}
+              onChange={handleChange}
+              onFocus={() => setIsTypingPassword(true)}
+              onBlur={() => setIsTypingPassword(false)}
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="auth-btn"
+            disabled={loading}
+            style={{ marginTop: "6px" }}
+          >
+            {loading ? "Signing in…" : "Sign In →"}
           </button>
         </form>
 
-        <p className="text-sm mt-4 text-center">
+        <p
+          style={{
+            textAlign: "center",
+            fontSize: "13.5px",
+            color: "#475569",
+            marginTop: "22px",
+          }}
+        >
           Don't have an account?{" "}
-          <Link to="/register" className="text-primary font-semibold">
+          <Link to="/register" className="auth-link">
             Register
           </Link>
         </p>

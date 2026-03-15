@@ -233,7 +233,7 @@ function MyApplication() {
       <div
         style={{
           position: "relative",
-          padding: "80px 24px 50px",
+          padding: "80px 24px 70px",
           textAlign: "center",
           background:
             "linear-gradient(160deg,#0f1117 0%,#131929 60%,#0f1117 100%)",
@@ -254,23 +254,26 @@ function MyApplication() {
             pointerEvents: "none",
           }}
         />
+
         <div className="dot-grid" />
+
         <div ref={headingRef} style={{ position: "relative", zIndex: 1 }}>
           <div className="tag-pill" style={{ marginBottom: "14px" }}>
             📁 My Applications
           </div>
+
           <h1
             style={{
               fontFamily: "'Syne',sans-serif",
               fontSize: "clamp(2rem,4.5vw,3rem)",
               fontWeight: 800,
               color: "#f1f5f9",
-              lineHeight: 1.1,
               marginBottom: "10px",
             }}
           >
             Application <span className="gradient-text">Tracker</span>
           </h1>
+
           <p style={{ color: "#64748b", fontSize: "0.95rem" }}>
             Track the status of all your submitted applications
           </p>
@@ -279,7 +282,17 @@ function MyApplication() {
 
       {/* Stats bar */}
       <div
-        style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 24px 32px" }}
+        style={{
+          maxWidth: "1100px",
+          margin: "40px auto 10px",
+          padding: "0 24px",
+          display: "flex",
+          gap: "16px",
+          flexWrap: "wrap",
+          justifyContent: "center",
+          position: "relative",
+          zIndex: 2,
+        }}
       >
         <div
           style={{
