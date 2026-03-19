@@ -1,7 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { sendContactMessage } from "../api/contactApi";
 import { useToast } from "../context/ToastContext";
+
+gsap.registerPlugin(ScrollTrigger);
 
 function Contact() {
   const [form, setForm] = useState({
@@ -15,6 +18,7 @@ function Contact() {
 
   const cardRef = useRef(null);
   const infoRef = useRef(null);
+  const mapRef = useRef(null);
 
   const { showToast } = useToast();
 
@@ -29,6 +33,22 @@ function Contact() {
         cardRef.current,
         { opacity: 0, x: 50 },
         { opacity: 1, x: 0, duration: 0.9, ease: "power3.out", delay: 0.2 },
+      );
+
+      gsap.fromTo(
+        mapRef.current,
+        { opacity: 0, y: 50 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 1,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: mapRef.current,
+            start: "top 85%",
+            toggleActions: "play none none reverse",
+          },
+        },
       );
     });
     return () => ctx.revert();
@@ -465,6 +485,46 @@ function Contact() {
                 </form>
               </>
             )}
+          </div>
+        </div>
+
+        {/* Map Section */}
+        <div
+          ref={mapRef}
+          style={{
+            marginTop: "64px",
+            background: "rgba(255,255,255,0.03)",
+            backdropFilter: "blur(20px)",
+            border: "1px solid rgba(255,255,255,0.06)",
+            borderRadius: "24px",
+            padding: "16px",
+            boxShadow: "0 20px 40px rgba(0,0,0,0.4)",
+          }}
+        >
+          <div
+            style={{
+              borderRadius: "16px",
+              overflow: "hidden",
+              display: "block",
+              position: "relative",
+              width: "100%",
+              height: "450px",
+            }}
+          >
+            <iframe
+              title="Location Map"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d42640.00604780084!2d72.9391612172137!3d19.156743446701896!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be7b8da14eacea9%3A0xb4f1e032d9e4fc41!2sK.C.%20College%20of%20Engineering%20%26%20Management%20Studies%20%26%20Research!5e0!3m2!1sen!2sin!4v1773591446600!5m2!1sen!2sin"
+              width="100%"
+              height="100%"
+              style={{
+                border: 0,
+                filter:
+                  "invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%)",
+              }}
+              allowFullScreen=""
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            ></iframe>
           </div>
         </div>
       </div>
