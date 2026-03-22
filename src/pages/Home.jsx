@@ -35,6 +35,9 @@ function Home() {
   const ctaSectionRef = useRef(null);
   const ctaInnerRef = useRef(null);
 
+  const horizontalRef = useRef(null);
+  const horizontalTextRef = useRef(null);
+
   /* ── State ── */
   const [timeLeft, setTimeLeft] = useState({
     days: 15,
@@ -313,7 +316,7 @@ function Home() {
           scrub: 1.2,
           pin: true,
           anticipatePin: 1,
-          pinSpacing: false, // ← last section, no spacer needed
+          pinSpacing: true, // ← updated to avoid overlap
         },
       });
 
@@ -348,6 +351,47 @@ function Home() {
       });
     });
 
+    return () => ctx.revert();
+  }, []);
+
+  /* ══════════════════════════════════════════════════════════
+     GSAP 6 — HORIZONTAL TEXT (pinned, with containerAnimation)
+  ══════════════════════════════════════════════════════════ */
+  useEffect(() => {
+    const wrapper = horizontalRef.current;
+    const text = horizontalTextRef.current;
+    if (!wrapper || !text) return;
+
+    const ctx = gsap.context(() => {
+      const scrollTween = gsap.to(text, {
+        x: () => -(text.offsetWidth - window.innerWidth / 2),
+        ease: "none",
+        scrollTrigger: {
+          trigger: wrapper,
+          pin: true,
+          start: "top top",
+          end: "+=5000px",
+          scrub: true,
+        },
+      });
+
+      const chars = text.querySelectorAll(".horizontal-char");
+      chars.forEach((char) => {
+        gsap.from(char, {
+          yPercent: gsap.utils.random(-200, 200),
+          rotation: gsap.utils.random(-20, 20),
+          opacity: 0,
+          ease: "back.out(1.2)",
+          scrollTrigger: {
+            trigger: char,
+            containerAnimation: scrollTween,
+            start: "left 100%",
+            end: "left 60%",
+            scrub: 1,
+          },
+        });
+      });
+    });
     return () => ctx.revert();
   }, []);
 
@@ -494,6 +538,33 @@ function Home() {
           position: absolute; inset: 0; z-index: 0;
           background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
           background-size: 28px 28px; pointer-events: none;
+        }
+
+        .Horizontal {
+          overflow: hidden;
+          height: 100vh;
+          display: flex;
+          align-items: center;
+          background: #0f1117;
+          position: relative;
+        }
+        .Horizontal__text {
+          display: flex;
+          width: max-content;
+          white-space: nowrap;
+          gap: 4vw;
+          padding-left: 100vw;
+        }
+        .heading-xl {
+          font-size: clamp(2rem, 10vw, 12rem);
+          font-weight: 600;
+          line-height: 1.1;
+          font-family: 'Syne', sans-serif;
+          color: #f1f5f9;
+        }
+        .horizontal-char {
+          display: inline-block;
+          will-change: transform, opacity;
         }
       `}</style>
 
@@ -1175,6 +1246,20 @@ function Home() {
             Apply Now →
           </button>
         </div>
+      </section>
+
+      {/* ══════════════════════════════════════
+          6. HORIZONTAL SCROLL SECTION
+      ══════════════════════════════════════ */}
+      <section className="Horizontal" ref={horizontalRef}>
+        <div className="dot-grid" />
+        <h3 className="Horizontal__text heading-xl" ref={horizontalTextRef}>
+          {"Shape the Future of Our Campus! Join the Student Council Today.".split("").map((char, i) => (
+            <span key={i} className="horizontal-char">
+              {char === " " ? "\u00A0" : char}
+            </span>
+          ))}
+        </h3>
       </section>
 
       {/* ══════════════════════════════════════
