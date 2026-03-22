@@ -8,6 +8,7 @@ import {
 } from "../api/applicationApi";
 import { getAllMessages } from "../api/contactApi";
 import { getDashboardStats } from "../api/statsApi";
+import { useToast } from "../context/ToastContext";
 
 /* ── Shared styles injected once ─────────────────────────────── */
 const STYLES = `
@@ -160,6 +161,7 @@ function AdminDashboard() {
   const [interviewAppId, setInterviewAppId] = useState(null);
   const [interviewDate, setInterviewDate] = useState("");
   const [messages, setMessages] = useState([]);
+  const { showToast } = useToast();
 
   useEffect(() => {
     fetchApplications();
@@ -220,7 +222,7 @@ function AdminDashboard() {
       await updateApplicationStatus(id, status);
       fetchApplications();
     } catch (error) {
-      console.log(error);
+      showToast(error.response?.data?.message || "An error occurred", "error");
     }
   };
 
@@ -233,7 +235,7 @@ function AdminDashboard() {
       await deleteApplication(id);
       fetchApplications();
     } catch (error) {
-      console.log(error);
+      showToast(error.response?.data?.message || "An error occurred", "error");
     }
   };
 
@@ -253,7 +255,7 @@ function AdminDashboard() {
       await updateInterviewStatus(id, status);
       fetchApplications();
     } catch (error) {
-      console.log(error);
+      showToast(error.response?.data?.message || "An error occurred", "error");
     }
   };
 
@@ -437,7 +439,7 @@ function AdminDashboard() {
           </span>
 
           <input
-            type="date"
+            type="datetime-local"
             value={interviewDate}
             onChange={(e) => setInterviewDate(e.target.value)}
             className="adm-input"
@@ -454,7 +456,7 @@ function AdminDashboard() {
                 setInterviewDate("");
                 fetchApplications();
               } catch (error) {
-                console.log(error);
+                showToast(error.response?.data?.message || "An error occurred", "error");
               }
             }}
           >
@@ -547,7 +549,7 @@ function AdminDashboard() {
                   </td>
                   <td style={{ color: "#64748b", fontSize: "12px" }}>
                     {app.interviewDate
-                      ? new Date(app.interviewDate).toLocaleDateString()
+                      ? new Date(app.interviewDate).toLocaleString()
                       : "—"}
                   </td>
                   <td>
